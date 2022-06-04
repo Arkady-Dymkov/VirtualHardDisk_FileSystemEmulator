@@ -1,10 +1,12 @@
+package Connections;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-class Connection {
+public class Connection {
 
     // Buffer for files
     private ByteBuffer buffer;
@@ -13,10 +15,10 @@ class Connection {
     private final FileChannel channel;
 
     // Gets us access to the file
-    private RandomAccessFile fileAccess;
+    private final RandomAccessFile fileAccess;
 
     /**
-     * Constructs a new instance of the Connection
+     * Constructs a new instance of the Connections.Connection
      *
      * @param accessFile Access file to connect to
      */
@@ -40,10 +42,10 @@ class Connection {
     }
 
     /**
-     * Create a new Connection by path (fabric method)
+     * Create a new Connections.Connection by path (fabric method)
      *
      * @param path Path to file
-     * @return new Connection instance
+     * @return new Connections.Connection instance
      * @throws IOException if an I/O error occurs during creating the connection to file
      */
     public static Connection connectByPath(String path) throws IOException {
