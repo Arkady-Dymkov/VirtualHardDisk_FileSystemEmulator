@@ -48,8 +48,10 @@ public class ReadPropertyFile {
         if (property == null) {
             return -1;
         }
+        int blockSize = Integer.parseInt(property);
+        if (blockSize <= 0 || blockSize % 32 != 0) {
+            throw new IllegalArgumentException("Block size must be more than zero and multiple of 32");
+        }
         return Integer.parseInt(property);
     }
-
-
 }

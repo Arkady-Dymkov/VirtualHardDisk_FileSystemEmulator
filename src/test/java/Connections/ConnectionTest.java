@@ -1,5 +1,6 @@
+package Connections;
+
 import TestingMetrics.ResourcesChecker;
-import Connections.Connection;
 import org.junit.jupiter.api.*;
 
 import java.io.File;
@@ -37,7 +38,7 @@ class ConnectionTest {
                 // zip (about 4.6 MB)
                 new File(Objects.requireNonNull(ConnectionTest.class.getResource("5")).getPath())
                 // zip (about 122.6 MB)
-                //new File(Objects.requireNonNull(ConnectionTest.class.getResource("6")).getPath()),
+                //new File(Objects.requireNonNull(Connections.ConnectionTest.class.getResource("6")).getPath()),
                 //new File("/Users/f1nc/Downloads/1")
         ));
         checker = new ResourcesChecker();

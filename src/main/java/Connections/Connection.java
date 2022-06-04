@@ -96,21 +96,24 @@ public class Connection {
      *
      * @param startByte start byte to write
      * @param data      data to write
+     * @return Start byte
      * @throws IOException if an I/O error occurs during writing
      */
-    public void overwriteFrom(long startByte, byte[] data) throws IOException {
+    public long overwriteFrom(long startByte, byte[] data) throws IOException {
         buffer = ByteBuffer.wrap(data);
         channel.write(buffer, startByte);
+        return startByte;
     }
 
     /**
      * Writes the specified bytes to the end of the file
      *
      * @param data data to write
+     * @return Start byte
      * @throws IOException if an I/O error occurs during writing
      */
-    public void writeToTheEnd(byte[] data) throws IOException {
-        overwriteFrom(channel.size(), data);
+    public long writeToTheEnd(byte[] data) throws IOException {
+        return overwriteFrom(channel.size(), data);
     }
 
     public long getSize() throws IOException {
