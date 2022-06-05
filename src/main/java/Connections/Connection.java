@@ -65,15 +65,20 @@ public class Connection {
     }
 
     /**
-     * Returns the
-     * @param startByte
-     * @param length
-     * @throws IOException
+     * Removes the specified number of bytes from the file
+     *
+     * @param startByte startByte to remove from
+     * @param length    length to remove
+     * @throws IOException if an I/O error occurs during the removal process
      */
     public void remove(long startByte, int length) throws IOException {
-        byte[] ending = this.read(startByte + length, (int) (this.getSize() - startByte + length));
-        this.overwriteFrom(startByte, ending);
-        this.channel.truncate(this.getSize()-length);
+        long endStart = startByte + length;
+        int lengthTillTheEnd = (int) (this.getSize() - startByte - length);
+        if (lengthTillTheEnd != 0) {
+            byte[] ending = this.read(endStart, lengthTillTheEnd);
+            this.overwriteFrom(startByte, ending);
+        }
+        this.channel.truncate(this.getSize() - length);
     }
 
     /**
