@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022. Arkady Dymkov townhospis<townhospis@gmail.com>
+ */
+
 package FileSystem;
 
 import java.io.File;
@@ -6,7 +10,6 @@ import java.io.Serializable;
 import java.nio.file.Files;
 
 public abstract class FileSystemObject implements Serializable {
-    // TODO: Implement
     protected FileSystem filesystem;
 
     // Name of the file system object

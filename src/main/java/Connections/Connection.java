@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022. Arkady Dymkov townhospis<townhospis@gmail.com>
+ */
+
 package Connections;
 
 import java.io.File;
