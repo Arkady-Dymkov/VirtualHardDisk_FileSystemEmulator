@@ -220,8 +220,6 @@ To restore the system, you need to call the static method
 fileSystem.save();
 ```
 
-## Description of the composition of the program
-
 
 
 
