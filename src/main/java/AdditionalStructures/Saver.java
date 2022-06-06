@@ -38,9 +38,13 @@ public final class Saver {
         objectOutputStream.flush();
         objectOutputStream.close();
         byte[] result = Files.readAllBytes(Paths.get(tmpFileName));
+        deleteTmp();
+        return result;
+    }
+
+    private static void deleteTmp() {
         //noinspection ResultOfMethodCallIgnored
         new File(tmpFileName).delete();
-        return result;
     }
 
     public static void saveBytesToTmp(byte[] bytes) throws IOException {
@@ -56,14 +60,14 @@ public final class Saver {
                 = new ObjectInputStream(fileInputStream);
         Object object = objectInputStream.readObject();
         objectInputStream.close();
-        //noinspection ResultOfMethodCallIgnored
-        new File(tmpFileName).delete();
+        deleteTmp();
         return object;
     }
 
     public static void saveFileSystem(FileSystem fileSystem, Connector connector) throws IOException {
         saveToTmp(fileSystem);
         byte[] bytes = Files.readAllBytes(Paths.get(tmpFileName));
+        deleteTmp();
         connector.close(bytes);
     }
 
