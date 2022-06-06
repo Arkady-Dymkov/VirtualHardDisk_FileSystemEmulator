@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022. Arkady Dymkov townhospis<townhospis@gmail.com>
+ */
+
 package ProjectSettings;
 
 import TestingMetrics.ResourcesChecker;

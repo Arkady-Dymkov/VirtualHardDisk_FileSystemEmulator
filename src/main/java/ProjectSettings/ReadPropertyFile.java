@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022. Arkady Dymkov townhospis<townhospis@gmail.com>
+ */
+
 package ProjectSettings;
 
 import java.io.FileInputStream;
@@ -61,11 +65,11 @@ public class ReadPropertyFile {
             blockSize = Integer.parseInt(property);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Block size must be more than zero " +
-                    "and multiple of 32 and in int range");
+                    "and multiple of 32 and in int range. " + property);
         }
         if (blockSize <= 0 || blockSize % 32 != 0) {
             throw new IllegalArgumentException("Block size must be more than zero " +
-                    "and multiple of 32 and in int range");
+                    "and multiple of 32 and in int range. " + blockSize);
         }
         return Integer.parseInt(property);
     }

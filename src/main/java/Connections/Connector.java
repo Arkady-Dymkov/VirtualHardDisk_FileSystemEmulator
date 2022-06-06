@@ -11,6 +11,7 @@ import AdditionalStructures.Saver;
 import FileSystem.FileSystem;
 import FileSystem.FileSystemObject;
 import FileSystem.VirtualFile;
+import FileSystem.VirtualFolder;
 import ProjectSettings.ReadPropertyFile;
 
 import java.io.File;
@@ -29,6 +30,8 @@ public class Connector {
     // Connection to the fileSystemFile
     private final Connection connection;
 
+    private FileSystem fileSystem;
+
     // Size of the blocks in the fileSystemFile
     private int blockSize;
 
@@ -44,6 +47,30 @@ public class Connector {
         connection = Connection.connectByFile(diskFile);
     }
 
+    public void setFileSystem(FileSystem fileSystem) {
+        this.fileSystem = fileSystem;
+    }
+
+    /**
+     * When a file is removed from the system, all other files are shifted
+     * @param startBlock start block, after witch files are shifted
+     * @param length length of removed file
+     * @param fileSystemObject object to fix
+     */
+    private void fixCoordinates(long startBlock, int length, FileSystemObject fileSystemObject) {
+        if (fileSystemObject instanceof VirtualFile) {
+            if (((VirtualFile) fileSystemObject).getCoordinate().startBlock() > startBlock) {
+                int l = ((VirtualFile) fileSystemObject).getCoordinate().length();
+                long st = ((VirtualFile) fileSystemObject).getCoordinate().startBlock() - length;
+                ((VirtualFile) fileSystemObject).setCoordinate(new FileCoordinate(st, l));
+            }
+        } else {
+            for(FileSystemObject child : ((VirtualFolder) fileSystemObject).getChildren()){
+                this.fixCoordinates(startBlock, length, child);
+            }
+        }
+    }
+
     /**
      * Required to securely create a new connector
      */
@@ -53,7 +80,6 @@ public class Connector {
 
         // File for the file that will be used to save file system file
         private final File diskFile;
-
 
         /**
          * Constructor of the builder
@@ -77,7 +103,7 @@ public class Connector {
          */
         public Builder setBlockSize(int blockSize) {
             if (blockSize <= 0 || blockSize % 32 != 0) {
-                throw new IllegalArgumentException("Block size must be more than zero and multiple of 32");
+                throw new IllegalArgumentException("Block size must be more than zero and multiple of 32. " + blockSize);
             }
             this.blockSize = blockSize;
             return this;
@@ -145,6 +171,7 @@ public class Connector {
         long startByte = file.getCoordinate().startBlock() * blockSize;
         int length = file.getCoordinate().length() * blockSize;
         connection.remove(startByte, length);
+        fixCoordinates(startByte, length, fileSystem.getRootFolder());
         file.setCoordinate(null);
     }
 
