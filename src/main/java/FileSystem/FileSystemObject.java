@@ -40,7 +40,7 @@ public abstract class FileSystemObject implements Serializable {
                 file.getName(), null);
     }
 
-    public static VirtualFile createFileByName(String name) throws IOException {
+    public static VirtualFile createFileByName(String name) {
         return new VirtualFile(null, name, null);
     }
 

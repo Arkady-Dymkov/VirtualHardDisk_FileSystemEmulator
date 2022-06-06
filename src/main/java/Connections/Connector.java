@@ -156,6 +156,9 @@ public class Connector implements Serializable {
      * @throws IOException if the file cannot be added to the file system container
      */
     public void addFile(VirtualFile file) throws IOException {
+        if(file.getData() == null){
+            return;
+        }
         long dataLength = file.getData().length;
         if (dataLength % blockSize != 0) {
             fixDataLength(file);
