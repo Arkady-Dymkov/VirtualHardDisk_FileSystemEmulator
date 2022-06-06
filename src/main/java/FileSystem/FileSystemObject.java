@@ -15,11 +15,22 @@ public abstract class FileSystemObject implements Serializable {
     // file system object parent
     protected VirtualFolder parent;
 
+    protected void setFilesystem(FileSystem filesystem) {
+        this.filesystem = filesystem;
+        if(this instanceof VirtualFolder){
+            for(FileSystemObject child : ((VirtualFolder) this).getChildren()){
+                child.setFilesystem(this.filesystem);
+            }
+        }
+    }
+
     protected FileSystemObject(String name, VirtualFolder parent) {
         this.name = name;
         this.parent = parent;
+        if (parent != null) {
+            this.filesystem = parent.filesystem;
+        }
     }
-
 
     public static VirtualFile createFileFromExistingFile(File file) throws IOException {
         return new VirtualFile(Files.readAllBytes(file.toPath()),
@@ -35,7 +46,6 @@ public abstract class FileSystemObject implements Serializable {
         return new VirtualFolder(name);
     }
 
-    // TODO: When folder creating , the name should be created too. Folder must be with name
 
     public String getName() {
         return name;
@@ -45,15 +55,13 @@ public abstract class FileSystemObject implements Serializable {
         this.name = name;
     }
 
-    public FileSystemObject getParent() {
+    protected VirtualFolder getParent() {
         return parent;
     }
 
-    public void setParent(VirtualFolder parent) {
+    protected void setParent(VirtualFolder parent) {
         this.parent = parent;
     }
 
-    public abstract void export(String path);
-
-    public abstract void delete() throws Exception;
+    protected abstract void delete() throws Exception;
 }

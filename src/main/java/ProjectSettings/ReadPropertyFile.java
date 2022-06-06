@@ -38,19 +38,34 @@ public class ReadPropertyFile {
     }
 
     /**
+     * Reloads the property file
+     */
+    public static void reloadInstance() {
+        instance = null;
+    }
+
+    /**
      * Returns the blockSIze property
+     *
      * @return BlockSIze property if it exists and -1 otherwise
      * @throws IOException throws exception if ReadPropertyFile couldn't be created.
-     * The reason is that the property file doesn't exist or couldn't be loaded
+     *                     The reason is that the property file doesn't exist or couldn't be loaded
      */
     public static int getBlockSize() throws IOException {
         var property = ReadPropertyFile.getInstance().properties.getProperty("blockSize");
         if (property == null) {
             return -1;
         }
-        int blockSize = Integer.parseInt(property);
+        int blockSize;
+        try {
+            blockSize = Integer.parseInt(property);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Block size must be more than zero " +
+                    "and multiple of 32 and in int range");
+        }
         if (blockSize <= 0 || blockSize % 32 != 0) {
-            throw new IllegalArgumentException("Block size must be more than zero and multiple of 32");
+            throw new IllegalArgumentException("Block size must be more than zero " +
+                    "and multiple of 32 and in int range");
         }
         return Integer.parseInt(property);
     }

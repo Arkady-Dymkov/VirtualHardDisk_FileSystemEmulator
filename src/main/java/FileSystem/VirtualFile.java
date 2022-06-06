@@ -95,12 +95,8 @@ public class VirtualFile extends FileSystemObject {
     }
 
     @Override
-    public void export(String path) {
-    }
-
-    @Override
     public void delete() throws Exception {
         this.filesystem.getConnector().removeFile(this);
-        this.parent.children.remove(this);
+        this.parent.getChildren().remove(this);
     }
 }

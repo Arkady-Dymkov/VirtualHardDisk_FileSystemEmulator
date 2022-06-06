@@ -51,6 +51,8 @@ public final class Saver {
                 = new ObjectInputStream(fileInputStream);
         Object object = objectInputStream.readObject();
         objectInputStream.close();
+        //noinspection ResultOfMethodCallIgnored
+        new File(tmpFileName).delete();
         return object;
     }
 

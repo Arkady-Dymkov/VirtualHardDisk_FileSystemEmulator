@@ -40,8 +40,6 @@ public class Connector {
         connection = Connection.connectByFile(diskFile);
     }
 
-    // TODO: Move here fixeSize function
-
     /**
      * Required to securely create a new connector
      */
@@ -80,8 +78,6 @@ public class Connector {
             this.blockSize = blockSize;
             return this;
         }
-
-        // TODO: Write restore method
 
         /**
          * Returns the block size. If the block size isn't specified, returns the default blockSize value from properties

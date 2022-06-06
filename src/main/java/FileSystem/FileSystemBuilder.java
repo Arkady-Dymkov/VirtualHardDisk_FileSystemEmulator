@@ -32,10 +32,15 @@ public class FileSystemBuilder {
 
     public FileSystem build() throws IOException {
         Connector connector;
+        FileSystem fileSystem;
         if(this.blockSize != -1){
             connector = new Connector.Builder(fileSystemPath).setBlockSize(this.blockSize).build();
-            return new FileSystem(connector, this.rootFolder);
+            fileSystem = new FileSystem(connector, this.rootFolder);
+            this.rootFolder.setFilesystem(fileSystem);
+            return fileSystem;
         }
-        return new FileSystem(new Connector.Builder(this.fileSystemPath).build(), this.rootFolder);
+        fileSystem = new FileSystem(new Connector.Builder(this.fileSystemPath).build(), this.rootFolder);
+        this.rootFolder.setFilesystem(fileSystem);
+        return fileSystem;
     }
 }
