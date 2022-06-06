@@ -7,19 +7,20 @@ package Connections;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-public class Connection {
+public class Connection implements Serializable {
 
     // Buffer for files
-    private ByteBuffer buffer;
+    private transient ByteBuffer buffer;
 
     // connector to "disk" file
-    private final FileChannel channel;
+    private transient final FileChannel channel;
 
     // Gets us access to the file
-    private final RandomAccessFile fileAccess;
+    private transient final RandomAccessFile fileAccess;
 
     /**
      * Constructs a new instance of the Connections.Connection
@@ -135,7 +136,7 @@ public class Connection {
      * @throws IOException if an I/O error occurs during closing
      */
     public void close() throws IOException {
-        this.channel.force(true);
+        //this.channel.force(true);
         this.channel.close();
         this.fileAccess.close();
     }

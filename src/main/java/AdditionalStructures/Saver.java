@@ -10,6 +10,7 @@ import FileSystem.FileSystem;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 public final class Saver {
     private static final int informationByteLength = 120;
@@ -69,6 +70,4 @@ public final class Saver {
     public static FileSystem loadFileSystem(String path) throws IOException, ClassNotFoundException {
         return new Connector.Builder(Paths.get(path)).build().restoreFileSystem(informationByteLength);
     }
-
-
 }

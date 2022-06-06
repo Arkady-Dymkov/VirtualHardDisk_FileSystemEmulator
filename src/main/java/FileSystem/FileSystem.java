@@ -15,7 +15,7 @@ public class FileSystem implements Serializable {
     private final Connector connector;
     private final VirtualFolder rootFolder;
 
-    protected Connector getConnector() {
+    public Connector getConnector() {
         return connector;
     }
 
@@ -35,4 +35,5 @@ public class FileSystem implements Serializable {
     public static FileSystem openExisted(String path) throws IOException, ClassNotFoundException {
         return Saver.loadFileSystem(path);
     }
+
 }

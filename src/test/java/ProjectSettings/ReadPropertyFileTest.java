@@ -40,8 +40,6 @@ class ReadPropertyFileTest {
     static void beforeAll() {
         readProperties = assertDoesNotThrow(() -> new FileInputStream("src/main/java/config.properties"),
                 "File to check couldn't be loaded to read correct answer. Test failed.");
-        writeToProperties = assertDoesNotThrow(() -> new PrintWriter("src/main/java/config.properties"),
-                "File to check couldn't be loaded to write new test value. Test failed.");
         resourcesChecker = new ResourcesChecker();
         System.out.println("Memory before tests: " + resourcesChecker.getMemory());
         resourcesChecker.startTimeCounting();
@@ -52,9 +50,11 @@ class ReadPropertyFileTest {
      */
     @AfterAll
     static void afterAll() {
+        writeToProperties = assertDoesNotThrow(() -> new PrintWriter("src/main/java/config.properties"),
+                "File to check couldn't be loaded to write new test value. Test failed.");
         assertDoesNotThrow(() -> readProperties.close(),
                 "File to check couldn't be closed. Test failed.");
-        assertDoesNotThrow(() -> writeToProperties.print(("blockSize=" + 32)),
+        assertDoesNotThrow(() -> writeToProperties.print("blockSize=32"),
                 "File to check couldn't be restore to default value. Test failed.");
         assertDoesNotThrow(() -> writeToProperties.close(),
                 "File to check couldn't be closed. Test failed.");
@@ -102,11 +102,9 @@ class ReadPropertyFileTest {
                 "Test value couldn't be written to properties. Test failed.");
         writeToProperties.close();
         ReadPropertyFile.reloadInstance();
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+        assertThrows(IllegalArgumentException.class,
                 ReadPropertyFile::getBlockSize,
                 "Property cannot be read on test with no value in property");
-        assertEquals("Block size must be more than zero and multiple of 32 and in int range",
-                thrown.getMessage(), "No value in property file");
 
         writeToProperties = assertDoesNotThrow(() -> new PrintWriter("src/main/java/config.properties"),
                 "File to check couldn't be loaded to write new test value. Test failed.");
@@ -131,11 +129,9 @@ class ReadPropertyFileTest {
             }
             writeNewValueToProperties(newValue);
             ReadPropertyFile.reloadInstance();
-            IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+            assertThrows(IllegalArgumentException.class,
                     ReadPropertyFile::getBlockSize,
                     "Property cannot be read on test " + newValue + ", test number " + newValue);
-            assertEquals("Block size must be more than zero and multiple of 32 and in int range",
-                    thrown.getMessage());
         }
     }
 
@@ -147,11 +143,9 @@ class ReadPropertyFileTest {
         for (int newValue = 0; newValue > -1_000; newValue--) {
             writeNewValueToProperties(newValue);
             ReadPropertyFile.reloadInstance();
-            IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+            assertThrows(IllegalArgumentException.class,
                     ReadPropertyFile::getBlockSize,
                     "Property cannot be read on test " + newValue + ", test number " + newValue * (-1));
-            assertEquals("Block size must be more than zero and multiple of 32 and in int range",
-                    thrown.getMessage());
         }
     }
 
@@ -163,19 +157,15 @@ class ReadPropertyFileTest {
         long positiveValue = 2_147_483_699L;
         writeNewValueToProperties(positiveValue);
         ReadPropertyFile.reloadInstance();
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+        assertThrows(IllegalArgumentException.class,
                 ReadPropertyFile::getBlockSize,
                 "Property cannot be read on test " + positiveValue);
-        assertEquals("Block size must be more than zero and multiple of 32 and in int range",
-                thrown.getMessage(), "wrong message was thrown");
 
         long negativeValue = -2_147_483_699L;
         writeNewValueToProperties(positiveValue);
         ReadPropertyFile.reloadInstance();
-        thrown = assertThrows(IllegalArgumentException.class,
+        assertThrows(IllegalArgumentException.class,
                 ReadPropertyFile::getBlockSize,
                 "Property cannot be read on test " + negativeValue);
-        assertEquals("Block size must be more than zero and multiple of 32 and in int range",
-                thrown.getMessage(), "wrong message was thrown");
     }
 }

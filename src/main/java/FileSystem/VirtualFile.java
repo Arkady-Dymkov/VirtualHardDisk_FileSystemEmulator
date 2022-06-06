@@ -7,6 +7,7 @@ package FileSystem;
 import AdditionalStructures.FileCoordinate;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * File class in virtual file system
@@ -57,6 +58,7 @@ public class VirtualFile extends FileSystemObject {
             return this.data;
         }
         this.filesystem.getConnector().getFileBody(this);
+        setDataBackToNormal();
         return this.data;
     }
 
@@ -82,6 +84,18 @@ public class VirtualFile extends FileSystemObject {
      */
     public void close() throws IOException {
         this.filesystem.getConnector().changeFile(this);
+    }
+
+    private void setDataBackToNormal() {
+        int countNulls = 0;
+        for (int i = this.data.length - 1; i >= 0; i--) {
+            if (this.data[i] == 0) {
+                countNulls++;
+            } else {
+                this.data = Arrays.copyOf(this.data, this.data.length - countNulls);
+                break;
+            }
+        }
     }
 
     /**
@@ -128,17 +142,17 @@ public class VirtualFile extends FileSystemObject {
      */
     public void append(byte[] newContents) throws IOException {
         this.filesystem.getConnector().getFileBody(this);
+        setDataBackToNormal();
         byte[] added = new byte[newContents.length + this.data.length];
 
-        //noinspection ManualArrayCopy
         for (int i = 0; i < this.data.length; i++){
             added[i] = this.data[i];
         }
-        //noinspection ManualArrayCopy
         for(int i = this.data.length; i < added.length; i++){
-            added[i] = newContents[i];
+            added[i] = newContents[i - this.data.length];
         }
         this.setData(added);
+        this.filesystem.getConnector().changeFile(this);
     }
 
     /**
@@ -149,5 +163,11 @@ public class VirtualFile extends FileSystemObject {
     public void delete() throws Exception {
         this.filesystem.getConnector().removeFile(this);
         this.parent.getChildren().remove(this);
+        this.parent = null;
+    }
+
+    public byte[] getCorrectData() {
+        setDataBackToNormal();
+        return this.getData();
     }
 }

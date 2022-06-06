@@ -16,6 +16,7 @@ import ProjectSettings.ReadPropertyFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -26,11 +27,15 @@ import java.util.Arrays;
  * It also adds several important methods, using a combination
  * of methods from the connection class
  */
-public class Connector {
+public class Connector implements Serializable {
     // Connection to the fileSystemFile
-    private final Connection connection;
+    private Connection connection;
 
     private FileSystem fileSystem;
+
+    protected void setConnection(Connection connection) {
+        this.connection = connection;
+    }
 
     // Size of the blocks in the fileSystemFile
     private int blockSize;
@@ -154,10 +159,15 @@ public class Connector {
         long dataLength = file.getData().length;
         if (dataLength % blockSize != 0) {
             fixDataLength(file);
+            dataLength = file.getData().length;
+        }
+        int length = Math.toIntExact(dataLength) / blockSize;
+        if (length <= 0) {
+            length = 1;
         }
         file.setCoordinate(new FileCoordinate(
                 connection.writeToTheEnd(file.getData()) / blockSize,
-                Math.toIntExact(dataLength) / blockSize));
+                length));
         file.setData(null);
     }
 
@@ -168,10 +178,13 @@ public class Connector {
      * @throws IOException if this is impossible to remove the virtual file
      */
     public void removeFile(VirtualFile file) throws IOException {
+        if (file.getCoordinate() == null) {
+            return;
+        }
         long startByte = file.getCoordinate().startBlock() * blockSize;
         int length = file.getCoordinate().length() * blockSize;
         connection.remove(startByte, length);
-        fixCoordinates(startByte, length, fileSystem.getRootFolder());
+        fixCoordinates(startByte / blockSize, length / blockSize, fileSystem.getRootFolder());
         file.setCoordinate(null);
     }
 
@@ -207,7 +220,11 @@ public class Connector {
         file.setData(savedTree);
         this.addFile(file);
         FileSystemTreeInformation info = new FileSystemTreeInformation();
-        info.setCountOfBlocks(file.getCoordinate().length() / blockSize);
+        int countOfBlocks = file.getCoordinate().length();
+        if (countOfBlocks <= 0) {
+            countOfBlocks = 1;
+        }
+        info.setCountOfBlocks(countOfBlocks);
         info.setBlockSize(this.blockSize);
         info.setControlSum(Math.toIntExact(this.connection.getSize()));
         this.connection.writeToTheEnd(Saver.getBytesFromObject(info));
@@ -222,13 +239,15 @@ public class Connector {
         if (info.getControlSum() != this.connection.getSize()) {
             throw new IOException("Control sum does not match. It can means that file was broken");
         }
-        Saver.saveBytesToTmp(this.connection.read(
+        VirtualFile tmpFile = FileSystemObject.createFileByName("tmp");
+        tmpFile.setData(this.connection.read(
                 connection.getSize() - (long) info.getCountOfBlocks() * blockSize,
-                info.getCountOfBlocks() * blockSize)
-        );
+                info.getCountOfBlocks() * blockSize));
+        Saver.saveBytesToTmp(tmpFile.getCorrectData());
         FileSystem fileSystem = (FileSystem) Saver.getObjectFromTmp();
         this.connection.remove(connection.getSize() - (long) info.getCountOfBlocks() * blockSize,
                 info.getCountOfBlocks() * blockSize);
+        fileSystem.getConnector().setConnection(connection);
         return fileSystem;
     }
 }
