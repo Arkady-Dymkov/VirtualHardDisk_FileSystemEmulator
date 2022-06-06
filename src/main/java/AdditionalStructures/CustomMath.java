@@ -4,7 +4,10 @@
 
 package AdditionalStructures;
 
-public class CustomMath {
+/**
+ * Class with custom math functions
+ */
+public final class CustomMath {
 
     /**
      * Returns the number, that heighten then "number", and disclosed on "multiple"

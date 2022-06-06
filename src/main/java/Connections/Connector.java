@@ -218,6 +218,12 @@ public class Connector implements Serializable {
     }
 
 
+    /**
+     * Creates a new FileSystemTreeInformation to save all information how to restore system
+     * And write it to the file system container
+     * @param savedTree serialized file tree
+     * @throws IOException if an error occurs during saving
+     */
     public void close(byte[] savedTree) throws IOException {
         VirtualFile file = FileSystemObject.createFileByName("system");
         file.setData(savedTree);
@@ -234,6 +240,14 @@ public class Connector implements Serializable {
         this.connection.close();
     }
 
+
+    /**
+     * Restores all information from the container
+     * @param lengthInfoBlock the length of the info block
+     * @return restored file system
+     * @throws IOException if restoring went wrong
+     * @throws ClassNotFoundException impossible library is broken and file couldnt be found
+     */
     public FileSystem restoreFileSystem(int lengthInfoBlock) throws IOException, ClassNotFoundException {
         Saver.saveBytesToTmp(this.connection.read(connection.getSize() - lengthInfoBlock, lengthInfoBlock));
         this.connection.remove(connection.getSize() - lengthInfoBlock, lengthInfoBlock);

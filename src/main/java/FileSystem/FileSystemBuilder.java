@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- *It's a file system builder. Allows you to securely create and set all file system options.
+ * It's a file system builder. Allows you to securely create and set all file system options.
  */
 public class FileSystemBuilder {
     private final Path fileSystemPath;
@@ -19,7 +19,7 @@ public class FileSystemBuilder {
     private final VirtualFolder rootFolder;
 
     /**
-     * Returns new FileSystemBuilder instance
+     * Returns new FileSystemBuilder instance.
      * @param pathToDiskCreate Path to the file that will be used for saving the file system
      */
     public FileSystemBuilder(Path pathToDiskCreate) {
@@ -32,16 +32,34 @@ public class FileSystemBuilder {
         }
     }
 
+    /**
+     * Sets block size.
+     *
+     * @param blockSize the block size
+     * @return the block size
+     */
     public FileSystemBuilder setBlockSize(int blockSize) {
         this.blockSize = blockSize;
         return this;
     }
 
+    /**
+     * Set root folder name file system builder.
+     *
+     * @param name the name
+     * @return the file system builder
+     */
     public FileSystemBuilder setRootFolderName(String name){
         this.rootFolder.setName(name);
         return this;
     }
 
+    /**
+     * Build file system.
+     *
+     * @return the file system
+     * @throws IOException the io exception
+     */
     public FileSystem build() throws IOException {
         Connector connector;
         FileSystem fileSystem;

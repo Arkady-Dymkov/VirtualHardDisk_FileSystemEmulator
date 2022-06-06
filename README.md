@@ -98,13 +98,16 @@ try {
 }
 ```
 ### Folder Actions
-The folder has only 2 properties:
-The ***name*** and ***contents*** of this folder (children)
+The folder has only 3 properties:
+The ***name***, ***parent*** and ***contents*** of 
+this folder (children).
 #### Name
-
 ```java
 // get the folder name
 folder.getName();
+
+// get folder parent
+folder.getParent();
         
 // set new name for the folder
 folder.setName("new name");
@@ -149,6 +152,73 @@ try {
 ```
 
 ### File Actions
+A file differs from a folder in only three ways:
+1. He has no children, and therefore nothing can be moved into him.
+2. The file has its contents (data) with which you can interact.
+3. The file has its coordinates in the container file.
+
+Based on these differences, the file has many
+use cases
+
+#### Move File
+In addition to the already discussed method,
+you can use the method `moveTo`:
+```java
+fileByExists.moveTo(destinationFolder);
+```
+
+#### Write new Content
+The `writeContent` method overwrites the entire 
+contents of the file and saves it automatically.:
+```java
+try {
+    fileByExists.writeContent("Hello, world!".getBytes(StandardCharsets.UTF_8));
+} catch (IOException e) {
+    // TODO: handle exception
+}
+```
+#### Append Content
+The rpo method appends the passed information 
+to the contents of the file and saves it automatically.
+```java
+try {
+    fileByExists.append("Hello, world!".getBytes(StandardCharsets.UTF_8));
+} catch (IOException e) {
+    // TODO: handle exception
+}
+```
+#### Set data and close
+The oop function changes the data of the file in RAM,
+but does not affect the data on the hard disk. In order
+for information about the new contents of the file from
+RAM to get to the hard disk, you must call the close method.
+Important! With such a merge, all data that was on the hard
+disk about this file will be overwritten. The same applies
+to reading from a hard disk into RAM, data from a file in RAM.
+```java
+fileByExists.setData("Hello, world!".getBytes(StandardCharsets.UTF_8));
+fileByExists.close();
+```
+
+#### Read From disk
+To read information from the disk, you can use `readContent`,
+then the information will be saved to RAM. In this case,
+you can take it with the help of `getData`.
+```java
+fileByExists.readContent();
+fileByExists.getData();
+```
+### Save and Restore Tree
+To save the tree, you need to call the save function on the 
+file system object.
+```java
+fileSystem.save();
+```
+To restore the system, you need to call the static method
+`openExisted` on the `FileSystem` class
+```java
+fileSystem.save();
+```
 
 ## Description of the composition of the program
 
