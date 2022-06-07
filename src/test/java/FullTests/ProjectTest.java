@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,9 +25,14 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 public class ProjectTest {
 
     static Path mainDatabase;
+    static Path deletedFileBase;
     static Path projectPath;
     static Path copyProjectPath;
+    static Path deletesCopy;
+
     static FileSystem copyProject;
+    static FileSystem deletedFiles;
+
     int countOfFiles;
     int filesToDelete;
 
@@ -34,14 +40,21 @@ public class ProjectTest {
     static void beforeAll() {
         mainDatabase = Path.of("../copyProject.jb");
         projectPath = Path.of("../VirtualHardDisk");
+        deletedFileBase = Path.of("../deletedCopy.jb");
+        deletesCopy = Path.of("../DeletedCopies");
         copyProjectPath = Path.of("../VirtualHardDiskCopy");
 
         if (!Files.exists(copyProjectPath)) {
             assertDoesNotThrow(() -> Files.createDirectory(copyProjectPath));
         }
-
+        if (!Files.exists(deletesCopy)) {
+            assertDoesNotThrow(() -> Files.createDirectory(deletesCopy));
+        }
         if (!Files.exists(mainDatabase)) {
             assertDoesNotThrow(() -> Files.createFile(mainDatabase));
+        }
+        if (!Files.exists(deletedFileBase)) {
+            assertDoesNotThrow(() -> Files.createFile(deletedFileBase));
         }
 
         // Creating file system for copy the project
@@ -50,11 +63,21 @@ public class ProjectTest {
                         .setRootFolderName(projectPath.toFile().getName())
                         .build()
         );
+        // Creating file system for copy the project
+        deletedFiles = assertDoesNotThrow(() ->
+                new FileSystemBuilder(deletedFileBase)
+                        .setRootFolderName(deletesCopy.toFile().getName())
+                        .build()
+        );
     }
 
     private static void cleanDataBase() {
         PrintWriter writeToProperties;
         writeToProperties = assertDoesNotThrow(() -> new PrintWriter(mainDatabase.toString()),
+                "DataBase couldn't be loaded");
+        writeToProperties.print("");
+        writeToProperties.close();
+        writeToProperties = assertDoesNotThrow(() -> new PrintWriter(deletedFileBase.toString()),
                 "DataBase couldn't be loaded");
         writeToProperties.print("");
         writeToProperties.close();
@@ -67,15 +90,41 @@ public class ProjectTest {
 
     @Test
     public void destroyAndRemoveTest() {
+        countOfFiles = 0;
+        filesToDelete = 0;
+
+        // Saving the project to the fileSystem
         if (projectPath.toFile().isDirectory()) {
             saveProject(Objects.requireNonNull(projectPath.toFile().listFiles()), copyProject.getRootFolder());
         }
+        // Calculate count of files to delete
         filesToDelete = (int) Math.ceil(countOfFiles * 0.7);
+        // Random number of files delete
         deleteRandomFiles(copyProject.getRootFolder().getChildren());
+
+        // Save project
         assertDoesNotThrow(copyProject::save);
+        // Save deleted files
+        assertDoesNotThrow(deletedFiles::save);
+
         copyProject = null;
+        // Open project folder
         copyProject = assertDoesNotThrow(() -> FileSystem.openExisted(mainDatabase.toString()));
+
         restoreProject(copyProject.getRootFolder().getChildren(), copyProjectPath.toString());
+
+        deletedFiles = null;
+        // Open deleted files folder
+        deletedFiles = assertDoesNotThrow(() -> FileSystem.openExisted(deletedFileBase.toString()));
+        restoreProject(deletedFiles.getRootFolder().getChildren(), deletesCopy.toString());
+    }
+
+    private void saveDeletedFile(VirtualFile file) {
+        VirtualFile newFile = FileSystemObject.createFileByName(file.getName());
+        deletedFiles.getRootFolder().moveHere(newFile);
+        assertDoesNotThrow(file::readContent);
+        newFile.setData(file.getData());
+        assertDoesNotThrow(newFile::close);
     }
 
     private void deleteRandomFiles(List<FileSystemObject> files) {
@@ -83,6 +132,7 @@ public class ProjectTest {
         for (var file : children) {
             if (file instanceof VirtualFile) {
                 if (filesToDelete >= 0 && new Random().nextBoolean()) {
+                    saveDeletedFile((VirtualFile) file);
                     assertDoesNotThrow(() ->
                             ((VirtualFile) file).delete()
                     );
@@ -103,11 +153,12 @@ public class ProjectTest {
                 );
                 restoreProject(((VirtualFolder) file).getChildren(), currentPath.toString());
             } else {
-                assertDoesNotThrow(() ->
-                        Files.createFile(currentPath)
-                );
-                assertDoesNotThrow(() -> ((VirtualFile) file).readContent());
-                assertDoesNotThrow(()->Files.write(currentPath, ((VirtualFile) file).getData()));
+                try {
+                    Files.createFile(currentPath);
+                    assertDoesNotThrow(() -> ((VirtualFile) file).readContent());
+                    Files.write(currentPath, ((VirtualFile) file).getData());
+                } catch (IOException ignored) {
+                }
             }
         }
     }
