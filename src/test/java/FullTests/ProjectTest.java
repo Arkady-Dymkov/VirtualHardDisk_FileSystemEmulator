@@ -5,6 +5,7 @@
 package FullTests;
 
 import FileSystem.*;
+import ProjectSettings.ReadPropertyFile;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ public class ProjectTest {
 
     @BeforeAll
     static void beforeAll() {
+        ReadPropertyFile.reloadInstance();
         mainDatabase = Path.of("../copyProject.jb");
         projectPath = Path.of("../VirtualHardDisk");
         deletedFileBase = Path.of("../deletedCopy.jb");
