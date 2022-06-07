@@ -14,8 +14,10 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
@@ -25,6 +27,8 @@ public class ProjectTest {
     static Path projectPath;
     static Path copyProjectPath;
     static FileSystem copyProject;
+    int countOfFiles;
+    int filesToDelete;
 
     @BeforeAll
     static void beforeAll() {
@@ -66,10 +70,28 @@ public class ProjectTest {
         if (projectPath.toFile().isDirectory()) {
             saveProject(Objects.requireNonNull(projectPath.toFile().listFiles()), copyProject.getRootFolder());
         }
+        filesToDelete = (int) Math.ceil(countOfFiles * 0.7);
+        deleteRandomFiles(copyProject.getRootFolder().getChildren());
         assertDoesNotThrow(copyProject::save);
         copyProject = null;
         copyProject = assertDoesNotThrow(() -> FileSystem.openExisted(mainDatabase.toString()));
         restoreProject(copyProject.getRootFolder().getChildren(), copyProjectPath.toString());
+    }
+
+    private void deleteRandomFiles(List<FileSystemObject> files) {
+        List<FileSystemObject> children = new ArrayList<>(files);
+        for (var file : children) {
+            if (file instanceof VirtualFile) {
+                if (filesToDelete >= 0 && new Random().nextBoolean()) {
+                    assertDoesNotThrow(() ->
+                            ((VirtualFile) file).delete()
+                    );
+                    filesToDelete--;
+                }
+            } else {
+                deleteRandomFiles(((VirtualFolder) file).getChildren());
+            }
+        }
     }
 
     public void restoreProject(List<FileSystemObject> files, String parentPath) {
@@ -88,11 +110,11 @@ public class ProjectTest {
                 assertDoesNotThrow(()->Files.write(currentPath, ((VirtualFile) file).getData()));
             }
         }
-
     }
 
     private void saveProject(File[] files, VirtualFolder parent) {
         for (File file : files) {
+            countOfFiles++;
             if (file.isDirectory()) {
                 VirtualFolder newFolder = FileSystemObject.createFolder(file.getName());
                 parent.moveHere(newFolder);
