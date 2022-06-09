@@ -94,15 +94,25 @@ public class ProjectTest {
     public void destroyAndRemoveTest() {
         countOfFiles = 0;
         filesToDelete = 0;
-
+        VirtualFolder folder;
         // Saving the project to the fileSystem
         if (projectPath.toFile().isDirectory()) {
-            saveProject(Objects.requireNonNull(projectPath.toFile().listFiles()), copyProject.getRootFolder());
+            folder = FileSystemObject.createFolder(projectPath.toFile().getName());
+            copyProject.getRootFolder().moveHere(folder);
+            saveProject(Objects.requireNonNull(projectPath.toFile().listFiles()), folder);
         }
         // Calculate count of files to delete
         filesToDelete = (int) Math.ceil(countOfFiles * 0.7);
         // Random number of files delete
         deleteRandomFiles(copyProject.getRootFolder().getChildren());
+
+        // Another copy
+        if (projectPath.toFile().isDirectory()) {
+            folder = FileSystemObject.createFolder("Another_Copy");
+            copyProject.getRootFolder().moveHere(folder);
+            saveProject(Objects.requireNonNull(projectPath.toFile().listFiles()), folder);
+        }
+
 
         // Save project
         assertDoesNotThrow(copyProject::save);
