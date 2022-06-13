@@ -4,38 +4,64 @@
 
 package FullTests;
 
+import FileSystem.FileSystem;
 import FileSystem.*;
 import ProjectSettings.ReadPropertyFile;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ProjectTest {
 
+    /**
+     * DataBase to save project
+     */
     static Path mainDatabase;
+
+    /**
+     * DataBase to save deleted files
+     */
     static Path deletedFileBase;
+
+    /**
+     * Path to the real project
+     */
     static Path projectPath;
+
+    /**
+     * Path to the directory containing full project files and project with deleted file
+     */
     static Path copyProjectPath;
-    static Path deletesCopy;
+
+    /**
+     * Path to the directory containing deleted files copy
+     */
+    static Path pathToDeletedFilesCopy;
+
+    /**
+     * Path to the directory containing full project files copy.
+     */
+    static Path pathToFullProjectCopy;
+
+    /**
+     * Path to the directory containing deleted files copy
+     */
+    static Path pathToProjectWithDeletedFiles;
 
     static FileSystem copyProject;
     static FileSystem deletedFiles;
 
-    int countOfFiles;
-    int filesToDelete;
+    static int countOfFiles;
+    static int filesToDelete;
+    static VirtualFolder folder;
 
     @BeforeAll
     static void beforeAll() {
@@ -43,14 +69,16 @@ public class ProjectTest {
         mainDatabase = Path.of("../copyProject.jb");
         projectPath = Path.of("../VirtualHardDisk");
         deletedFileBase = Path.of("../deletedCopy.jb");
-        deletesCopy = Path.of("../DeletedCopies");
+        pathToDeletedFilesCopy = Path.of("../DeletedCopies");
         copyProjectPath = Path.of("../VirtualHardDiskCopy");
+        pathToFullProjectCopy = Path.of("../VirtualHardDiskCopy/VirtualHardDisk");
+        pathToProjectWithDeletedFiles = Path.of("../VirtualHardDiskCopy/Another_Copy");
 
         if (!Files.exists(copyProjectPath)) {
             assertDoesNotThrow(() -> Files.createDirectory(copyProjectPath));
         }
-        if (!Files.exists(deletesCopy)) {
-            assertDoesNotThrow(() -> Files.createDirectory(deletesCopy));
+        if (!Files.exists(pathToDeletedFilesCopy)) {
+            assertDoesNotThrow(() -> Files.createDirectory(pathToDeletedFilesCopy));
         }
         if (!Files.exists(mainDatabase)) {
             assertDoesNotThrow(() -> Files.createFile(mainDatabase));
@@ -68,9 +96,12 @@ public class ProjectTest {
         // Creating file system for copy the project
         deletedFiles = assertDoesNotThrow(() ->
                 new FileSystemBuilder(deletedFileBase)
-                        .setRootFolderName(deletesCopy.toFile().getName())
+                        .setRootFolderName(pathToDeletedFilesCopy.toFile().getName())
                         .build()
         );
+        countOfFiles = 0;
+        filesToDelete = 0;
+        folder = null;
     }
 
     private static void cleanDataBase() {
@@ -90,35 +121,48 @@ public class ProjectTest {
         assertDoesNotThrow(ProjectTest::cleanDataBase);
     }
 
+
     @Test
-    public void destroyAndRemoveTest() {
-        countOfFiles = 0;
-        filesToDelete = 0;
-        VirtualFolder folder;
+    @Order(1)
+    public void saveProjectToFileSystem() {
         // Saving the project to the fileSystem
         if (projectPath.toFile().isDirectory()) {
-            folder = FileSystemObject.createFolder(projectPath.toFile().getName());
+            folder = FileSystemObject.createFolder(pathToFullProjectCopy.toFile().getName());
             copyProject.getRootFolder().moveHere(folder);
             saveProject(Objects.requireNonNull(projectPath.toFile().listFiles()), folder);
         }
         // Calculate count of files to delete
         filesToDelete = (int) Math.ceil(countOfFiles * 0.7);
-        // Random number of files delete
-        deleteRandomFiles(copyProject.getRootFolder().getChildren());
 
         // Another copy
         if (projectPath.toFile().isDirectory()) {
-            folder = FileSystemObject.createFolder("Another_Copy");
+            folder = FileSystemObject.createFolder(pathToProjectWithDeletedFiles.toFile().getName());
             copyProject.getRootFolder().moveHere(folder);
             saveProject(Objects.requireNonNull(projectPath.toFile().listFiles()), folder);
         }
+    }
 
+    @Test
+    @Order(2)
+    public void deleteRandomFiles() {
+        // Random number of files delete
+        if (folder != null) {
+            deleteRandomFiles(folder.getChildren());
+        }
+    }
 
+    @Test
+    @Order(3)
+    public void saveFileSystems() {
         // Save project
         assertDoesNotThrow(copyProject::save);
         // Save deleted files
         assertDoesNotThrow(deletedFiles::save);
+    }
 
+    @Test
+    @Order(4)
+    public void loadAndRestoreFileSystems() {
         copyProject = null;
         // Open project folder
         copyProject = assertDoesNotThrow(() -> FileSystem.openExisted(mainDatabase.toString()));
@@ -128,8 +172,26 @@ public class ProjectTest {
         deletedFiles = null;
         // Open deleted files folder
         deletedFiles = assertDoesNotThrow(() -> FileSystem.openExisted(deletedFileBase.toString()));
-        restoreProject(deletedFiles.getRootFolder().getChildren(), deletesCopy.toString());
+        restoreProject(deletedFiles.getRootFolder().getChildren(), pathToDeletedFilesCopy.toString());
+
     }
+
+    @Test
+    @Order(5)
+    public void verifyProjectAreEqual() {
+        assertDoesNotThrow(() -> verifyDirsAreEqual(
+                projectPath,
+                pathToFullProjectCopy));
+    }
+
+    @Test
+    @Order(6)
+    public void verifyDeletedFilesAreDeleted() {
+        assertDoesNotThrow(() -> verifyNoDeletedFiles(
+                Objects.requireNonNull(pathToProjectWithDeletedFiles.toFile().listFiles()),
+                pathToDeletedFilesCopy.toFile().listFiles()));
+    }
+
 
     private void saveDeletedFile(VirtualFile file) {
         VirtualFile newFile = FileSystemObject.createFileByName(file.getName());
@@ -189,5 +251,49 @@ public class ProjectTest {
                 assertDoesNotThrow(newFile::close);
             }
         }
+    }
+
+    private void verifyNoDeletedFiles(File[] files, File[] deletedFiles) {
+        for (File file : files) {
+            if (file.isDirectory()) {
+                verifyNoDeletedFiles(Objects.requireNonNull(file.listFiles()), deletedFiles);
+            } else {
+                for (var deletedFile : List.of(deletedFiles)) {
+                    if (assertDoesNotThrow(() -> equalsOfFiles(file.toPath(), deletedFile.toPath()))) {
+                        System.out.println("Deleted file " + deletedFile + " is not deleted" + file);
+                    }
+                }
+            }
+        }
+    }
+
+
+    private static boolean equalsOfFiles(Path one, Path other) throws IOException {
+        byte[] otherBytes = Files.readAllBytes(other);
+        byte[] theseBytes = Files.readAllBytes(one);
+        return Arrays.equals(otherBytes, theseBytes) && one.toFile().getName().equals(other.toFile().getName());
+    }
+
+    private static void verifyDirsAreEqual(Path one, Path other) throws IOException {
+        Files.walkFileTree(one, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file,
+                                             BasicFileAttributes attrs)
+                    throws IOException {
+                FileVisitResult result = super.visitFile(file, attrs);
+
+                // get the relative file name from path "one"
+                Path relativize = one.relativize(file);
+                // construct the path for the counterpart file in "other"
+                Path fileInOther = other.resolve(relativize);
+
+                byte[] otherBytes = Files.readAllBytes(fileInOther);
+                byte[] theseBytes = Files.readAllBytes(file);
+                if (!Arrays.equals(otherBytes, theseBytes)) {
+                    System.out.println(file + " is not equal to " + fileInOther);
+                }
+                return result;
+            }
+        });
     }
 }
