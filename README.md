@@ -1,5 +1,4 @@
 # VirtualHardDisk_FileSystemEmulator
-> This task was completed as part of a test task at JetBrains
 
 ## Description
 
